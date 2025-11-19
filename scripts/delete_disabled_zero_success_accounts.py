@@ -10,7 +10,7 @@ DB_PATH = BASE_DIR / "data.sqlite3"
 
 def delete_disabled_accounts() -> int:
     """
-    Delete all accounts where enabled=0 from the SQLite database.
+    Delete accounts where enabled=0 AND success_count=0 from the SQLite database.
     Returns the number of rows deleted.
     """
     if not DB_PATH.exists():
@@ -33,12 +33,15 @@ def delete_disabled_accounts() -> int:
             if "enabled" not in cols:
                 print("Column 'enabled' not found in 'accounts' table.")
                 return 0
+            if "success_count" not in cols:
+                print("Column 'success_count' not found in 'accounts' table.")
+                return 0
 
             # Count first for clear reporting, then delete
-            count = (conn.execute("SELECT COUNT(*) FROM accounts WHERE enabled=0").fetchone() or [0])[0]
-            conn.execute("DELETE FROM accounts WHERE enabled=0")
+            count = (conn.execute("SELECT COUNT(*) FROM accounts WHERE enabled=0 AND success_count=0").fetchone() or [0])[0]
+            conn.execute("DELETE FROM accounts WHERE enabled=0 AND success_count=0")
             conn.commit()
-            print(f"Deleted {count} disabled account(s).")
+            print(f"Deleted {count} disabled account(s) with zero success count.")
             return int(count)
     except sqlite3.Error as e:
         print(f"SQLite error: {e}", file=sys.stderr)
